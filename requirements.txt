@@ -1,0 +1,8 @@
+streamlit
+pandas
+altair
+aiohttp
+numpy
+plotly
+altair
+requests
