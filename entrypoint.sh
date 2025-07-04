@@ -4,7 +4,6 @@ set -e
 mkdir -p /app/.streamlit
 
 cat > /app/.streamlit/secrets.toml <<EOF
-[general]
 CORPUS_API="${CORPUS_API}"
 CORPUS_URL="${CORPUS_URL}"
 DB_API="${DB_API}"
