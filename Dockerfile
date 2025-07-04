@@ -11,7 +11,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy the rest of the application
 COPY . .
 
-COPY /app/.streamlit/secrets.toml.example /app/.streamlit/secrets.toml
+# Copy the secrets file from example to actual secrets file
+COPY .streamlit/secrets.toml.example .streamlit/secrets.toml
 
 # Expose the port Streamlit runs on
 EXPOSE 8501
