@@ -8,18 +8,15 @@ WORKDIR /app
 COPY requirements.txt ./
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy the rest of the application
+# Copy application code
 COPY . .
 
-# Copy the secrets file from example to actual secrets file
-COPY .streamlit/secrets.toml.example .streamlit/secrets.toml
+# Copy entrypoint script
+COPY entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
 
-# Expose the port Streamlit runs on
+# Expose Streamlit port
 EXPOSE 8501
 
-# Set environment variables for Streamlit secrets (Coolify will inject these)
-# Example: STREAMLIT_SECRET_KEY, STREAMLIT_DB_URL, etc.
-# You should map these in Coolify to the corresponding secrets in secrets.toml
-
-# Start the Streamlit app
-CMD ["streamlit", "run", "app.py", "--server.port=8501", "--server.address=0.0.0.0"]
+# Set entrypoint
+ENTRYPOINT ["/entrypoint.sh"]
