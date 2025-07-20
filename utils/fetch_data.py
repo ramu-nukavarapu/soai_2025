@@ -83,3 +83,41 @@ def fetch_corpus_data(url, headers):
             break
 
     return users
+
+@st.cache_data(show_spinner=False)
+def fetch_corpus_records_data(url, headers):
+    all_records = []
+    skip = 0
+    limit = 1000  # Keep reasonable batch size
+    page = 1
+    
+    try:
+        while True:
+            url = f"https://backend2.swecha.org/api/v1/records/?skip={skip}&limit={limit}"
+
+            response = requests.get(url, headers=headers, timeout=60)
+            response.raise_for_status()
+            data = response.json()
+            
+            if not isinstance(data, list):
+                break
+            
+            # If no data returned, we've reached the end
+            if not data:
+                break
+            
+            # Add records to our collection
+            all_records.extend(data)
+            
+            # If we got less than the limit, we've reached the end
+            if len(data) < limit:
+                break
+            
+            # Prepare for next iteration
+            skip += limit
+            page += 1
+            
+        return all_records
+        
+    except Exception as e:
+        return []
