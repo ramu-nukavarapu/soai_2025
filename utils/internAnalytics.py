@@ -3,6 +3,7 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
+from st_aggrid import AgGrid, GridOptionsBuilder, GridUpdateMode, DataReturnMode
 import re
 import plotly.graph_objects as go
 import altair as alt
@@ -58,68 +59,92 @@ def clean_college_name(name):
     cleaned = ' '.join(name.split())
     return cleaned.strip()
 
-def display_data(data, cohort_type, intern_type):
+def display_data(data):
+    st.title("🏫 Intern Registration Dashboard")
+
+    # Convert raw data to DataFrame
     df = pd.DataFrame(data)
 
-    # Rename columns for easier access
+    # Clean and rename columns
     df.rename(columns={
-        'Affiliation (College/Company/Organization Name)': 'CollegeName',
-        'Full Name': 'FullName',
+        'Affiliation (College/Company/Organization Name)': 'College',
+        'Full Name': 'Name',
         'Id': 'StudentID'
     }, inplace=True)
 
-    # Clean and type-cast
     df['Age'] = pd.to_numeric(df['Age'], errors='coerce')
     df['Gender'] = df['Gender'].str.strip().str.title()
-    df['CollegeName'] = df['CollegeName'].str.strip()
+    df['College'] = df['College'].str.strip()
 
-    st.header("📊 College Wise Registrations")
+    # 🔢 College-wise Summary
+    st.markdown("### 📊 College-wise Registrations")
 
-    college_data = df.groupby('CollegeName')['StudentID'].count().reset_index()
-    college_data.rename(columns={'StudentID': 'TotalRegistrations'}, inplace=True)
+    college_summary = df.groupby('College').agg({
+        'StudentID': 'count'
+    }).rename(columns={'StudentID': 'Total Registrations'}).reset_index()
 
-    total_registrations = college_data['TotalRegistrations'].sum()
-    total_colleges = college_data['CollegeName'].nunique()
+    college_summary = college_summary.sort_values(by='Total Registrations', ascending=False)
 
-    col1, col2 = st.columns(2)
-    col1.metric("Total Registrations", f"{total_registrations:,}")
-    col2.metric("Number of Colleges", f"{total_colleges}")
+    # AG Grid setup for College Summary
+    gb1 = GridOptionsBuilder.from_dataframe(college_summary)
+    gb1.configure_pagination(paginationAutoPageSize=True)
+    gb1.configure_side_bar()
+    gb1.configure_default_column(sortable=True, filter=True, resizable=True)
+    gb1.configure_selection(selection_mode="single", use_checkbox=False)
+    grid_options1 = gb1.build()
 
-    st.subheader("🏆 Registrations by College")
-    top_n = st.slider("Select number of top colleges", min_value=5, max_value=50, value=10)
-    top_df = college_data.sort_values(by="TotalRegistrations", ascending=False).head(top_n)
-
-    top_df_display = top_df.reset_index(drop=True)
-    top_df_display.index = top_df_display.index + 1
-    st.dataframe(top_df_display, use_container_width=True)
-
-    st.subheader("📈 Bar Chart - Top Colleges")
-    chart = alt.Chart(top_df).mark_bar().encode(
-        x=alt.X('TotalRegistrations:Q', title='Registrations'),
-        y=alt.Y('CollegeName:N', sort='-x', title='College Name'),
-        tooltip=['CollegeName', 'TotalRegistrations']
+    # Render AG Grid 1
+    grid_response1 = AgGrid(
+        college_summary,
+        gridOptions=grid_options1,
+        data_return_mode=DataReturnMode.FILTERED_AND_SORTED,
+        update_mode=GridUpdateMode.SELECTION_CHANGED,
+        fit_columns_on_grid_load=True,
+        theme="streamlit",
+        height=400,
+        width='100%'
     )
-    st.altair_chart(chart, use_container_width=True)
 
-    st.subheader("🏫 All Colleges - Registration Wise")
+    # 📋 Show student data if a college is selected
+    st.markdown("### 👨‍🎓 Students from Selected College")
 
-    # Sort all colleges by registration count (optional for visualization)
-    all_df = college_data.sort_values(by="TotalRegistrations", ascending=False)
+    selected_college = None
+    selected_rows = grid_response1.get("selected_rows", [])
 
-    with st.container():
-        search_query_all = st.text_input("Enter college name", placeholder="e.g., NIT, IIT, SRM")
+    if selected_rows is not None and not selected_rows.empty:
+        selected_college = selected_rows.iloc[0]['College']
+        st.success(f"📍 Showing students from: **{selected_college}**")
+    else:
+        st.info("👆 Please select a college from the table above to view student details.")
+        return
 
-        if search_query_all:
-            filtered_all_df = all_df[all_df["CollegeName"].str.contains(search_query_all, case=False, na=False)]
-            st.success(f"Found {len(filtered_all_df)} matching colleges")
-        else:
-            filtered_all_df = all_df
+    # Filter student data for selected college
+    student_df = df[df['College'] == selected_college].copy()
 
-        all_df_display = filtered_all_df.reset_index(drop=True)
-        all_df_display.index = all_df_display.index + 1
+    student_display = student_df[['StudentID', 'Name', 'College', 'Age', 'Gender', 'Contact Number', 'Email Address']].copy().rename(columns={
+        'Contact number': 'Phone',
+        'Id': 'Student ID'
+    })
 
-        st.dataframe(all_df_display, use_container_width=True)
+    # AG Grid setup for Student Details
+    gb2 = GridOptionsBuilder.from_dataframe(student_display)
+    gb2.configure_pagination(paginationAutoPageSize=True)
+    gb2.configure_side_bar()
+    gb2.configure_default_column(sortable=True, filter=True, resizable=True)
+    gb2.configure_column("Name", pinned="left", width=200)
+    grid_options2 = gb2.build()
 
+    # Render AG Grid 2
+    AgGrid(
+        student_display,
+        gridOptions=grid_options2,
+        data_return_mode=DataReturnMode.FILTERED_AND_SORTED,
+        update_mode=GridUpdateMode.MODEL_CHANGED,
+        fit_columns_on_grid_load=True,
+        theme="streamlit",
+        height=600,
+        width='100%'
+    )
     # Age Analysis
     st.header("🎂 Registrations by Age")
     age_df = df.dropna(subset=['Age'])
@@ -705,7 +730,7 @@ def display_data_summary(filtered_df, selected_state):
                 ][["Label", "Level", "TotalRegistrations"]]
                 st.dataframe(state_colleges, use_container_width=True)
         else:
-            st.info(f"No data available for the selected filters")
+            st.info("No data available for the selected filters")
 
 
 def display_sunburst_diagram(ai_data, techlead_data, cohort_typ):
