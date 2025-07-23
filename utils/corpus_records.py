@@ -1,7 +1,7 @@
 import pandas as pd
 import streamlit as st
 
-from utils.load_session_data import get_aidev_data, get_corpus_records_users, get_corpus_users
+from utils.load_session_data import get_aidev_data, get_corpus_records_users, get_corpus_users, get_techlead_data
 
 def clean_phone_number(phone):
     """Clean and normalize phone numbers for matching"""
@@ -17,7 +17,7 @@ def clean_phone_number(phone):
         return phone_clean
     return None
 
-def generate_contribution_data():
+def generate_contribution_data(intern_type, cohort_type):
     try:
         users_data = get_corpus_users()
         if not users_data:
@@ -29,8 +29,29 @@ def generate_contribution_data():
         st.error(f"Error fetching users: {e}")
         return None
     
+    aidev_ranges = {
+        "cohort1": (0, 25000),
+        "cohort2": (25001, 44126),
+    }
+
+    techlead_ranges = {
+        "cohort1": (0, 1730),
+        "cohort2": (1731, 2348),
+    }
+
+    a_start, a_end = aidev_ranges[cohort_type]
+    t_start, t_end = techlead_ranges[cohort_type]
+    
     try:
-        df_clg = pd.DataFrame(get_aidev_data())
+        if intern_type == "aidev":
+            df_clg = pd.DataFrame(get_aidev_data())
+            df_clg = df_clg[(df_clg['Id'] >= a_start) & (df_clg['Id'] <= a_end)]
+        elif intern_type == "techlead":
+            df_clg = pd.DataFrame(get_techlead_data())
+            df_clg = df_clg[(df_clg['Id'] >= t_start) & (df_clg['Id'] <= t_end)]
+        else:
+            pass
+
     except Exception as e:
         st.error(f"Error reading college details: {e}")
         return None

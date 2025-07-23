@@ -6,12 +6,35 @@ from utils.load_session_data import wait_for_data
 
 
 def corpus_stats_page():
-    wait_for_data(["corpus_users", "corpus_user_records"])
+    wait_for_data(['aidev', 'techlead', "corpus_users", "corpus_user_records"])
     st.title("🏫 College Overview Dashboard")
+
+    if "cohort" not in st.session_state: 
+        st.session_state.cohort = "cohort1"
+    if "intern" not in st.session_state: 
+        st.session_state.intern = "aidev"
+
+    col1, col2 = st.columns(2)
+
+    with col1:
+        st.subheader("Select Intern Type")
+        selected_intern = st.selectbox(
+            "Choose a Intern type:",
+            ["aidev", "techlead", "residential"],
+            key="view_selector"
+        )
+        st.session_state.intern = selected_intern
+
+    with col2:
+        st.subheader("Select Cohort")
+        selected_cohort = st.selectbox("Choose a cohort:", ["cohort1", "cohort2", "residential"], key="cohort_selector")
+        st.session_state.cohort = selected_cohort
+        st.subheader(f"Selected Cohort: {st.session_state.cohort.upper()}")
+    
 
     st.info("📊 Loading existing contributions data...")
     try:
-        df_final = generate_contribution_data()
+        df_final = generate_contribution_data(st.session_state.intern, st.session_state.cohort)
     except Exception as e:
         st.error(f"Error loading contributions data: {e}")
         return
