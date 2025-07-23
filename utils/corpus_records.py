@@ -116,12 +116,14 @@ def generate_contribution_data():
         
         # Get duration values, default to 0 if not present
         user_durations = duration_by_user_media.loc[user_id] if user_id in duration_by_user_media.index else {}
-        audio_duration = user_durations.get('audio', 0.0)
-        video_duration = user_durations.get('video', 0.0)
+        audio_duration = user_durations.get('audio', 0.0)/3600
+        video_duration = user_durations.get('video', 0.0)/3600
+        total_hours = audio_duration + video_duration
 
         contribution_details.append({
             'user_id': user_id,
             'total contributions': row['total_contributions'],
+            'total hours': total_hours,
             'image': media_counts['image'],
             'video': media_counts['video'],
             'video_duration': video_duration,
@@ -141,13 +143,13 @@ def generate_contribution_data():
     )
     
     # Fill missing contribution data with zeros
-    contribution_columns = ['total contributions', 'image', 'video', 'audio', 'text', 'audio_duration', 'video_duration']
+    contribution_columns = ['total contributions', 'image', 'video', 'audio', 'text']
     for col in contribution_columns:
         df_final[col] = df_final[col].fillna(0).astype(int)
     
     # Select and reorder final columns as specified
     final_columns = ['Name', 'Phone no', 'Registration status', 'user id', 
-                 'total contributions', 'image', 'audio', 'audio_duration',
+                 'total contributions', 'total hours', 'image', 'audio', 'audio_duration',
                  'video', 'video_duration', 'text', 
                  'College', 'Email', 'CreatedAt']
     

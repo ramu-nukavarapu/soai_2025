@@ -73,8 +73,8 @@ def corpus_stats_page():
     
     # Prepare data for AG Grid 2
     student_details = filtered_df[[
-        'Name', 'Registration status', 'total contributions', 
-        'image', 'video', 'video_duration', 'audio', 'audio_duration', 'text'
+        'Name', 'Registration status', 'total contributions', 'total hours',
+        'video', 'video_duration', 'audio', 'audio_duration', 'image', 'text'
     ]].copy()
     
     student_details.rename(columns={
