@@ -166,11 +166,12 @@ def home_page():
     
     with col2:
         if not st.session_state.corpus_user_records:
-            try:
-                st.session_state.corpus_user_records = fetch_corpus_records_data(CORPUS_URL, CORPUS_HEADERS)
-            except Exception as e:
-                st.error(f"Error fetching corpus data: {str(e)}")
-                st.session_state.corpus_user_records = []
+            with st.spinner("Fetching corpus user records..."):
+                try:
+                    st.session_state.corpus_user_records = fetch_corpus_records_data(CORPUS_URL, CORPUS_HEADERS)
+                except Exception as e:
+                    st.error(f"Error fetching corpus data: {str(e)}")
+                    st.session_state.corpus_user_records = []
         if st.session_state.corpus_user_records is not None:
             st.metric("Total Corpus User Records", len(st.session_state.corpus_user_records))
         else:
