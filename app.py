@@ -1,5 +1,5 @@
 import streamlit as st
-from utils.fetch_data import fetch_corpus_data, fetch_gitlab_users, fetch_registrations_data
+from utils.fetch_data import fetch_corpus_data, fetch_corpus_records_data, fetch_gitlab_users, fetch_registrations_data
 
 # Configuration
 st.set_page_config(
@@ -62,7 +62,9 @@ def init_session_state():
         st.session_state.techlead = None
     if 'gitlab_users' not in st.session_state:
         st.session_state.gitlab_users = None
-
+    if 'corpus_user_records' not in st.session_state:
+        st.session_state.corpus_user_records = None
+    
 # Home page
 def home_page():
     st.markdown('<h1 class="main-header">Unified SOAI Dashboard</h1>', unsafe_allow_html=True)
@@ -112,7 +114,7 @@ def home_page():
         st.cache_data.clear()
         st.rerun()
     
-    col1, col2, col3 = st.columns(3)
+    col1, col2 = st.columns(2)
 
     with col1:
         if not st.session_state.aidev or not st.session_state.techlead:
@@ -145,8 +147,10 @@ def home_page():
             st.metric("Total GitLab Users", len(st.session_state.gitlab_users))
         else:
             st.warning("GitLab data not available")
+
+    col1, col2 = st.columns(2)
     
-    with col3:
+    with col1:
         if not st.session_state.corpus_users:
             with st.spinner("Fetching corpus users..."):
                 try:
@@ -159,7 +163,19 @@ def home_page():
             st.metric("Total Corpus App Users", len(st.session_state.corpus_users))
         else:
             st.warning("Corpus data not available")
-
+    
+    with col2:
+        if not st.session_state.corpus_user_records:
+            with st.spinner("Fetching corpus user records..."):
+                try:
+                    st.session_state.corpus_user_records = fetch_corpus_records_data(CORPUS_URL, CORPUS_HEADERS)
+                except Exception as e:
+                    st.error(f"Error fetching corpus data: {str(e)}")
+                    st.session_state.corpus_user_records = []
+        if st.session_state.corpus_user_records is not None:
+            st.metric("Total Corpus User Records", len(st.session_state.corpus_user_records))
+        else:
+            st.warning("Corpus data not available")
 def main():
     init_session_state()
     home_page()

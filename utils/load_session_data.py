@@ -17,6 +17,10 @@ def get_corpus_users():
     """Get corpus users data from session state"""
     return st.session_state.get('corpus_users', [])
 
+def get_corpus_records_users():
+    """Get corpus user records data from session state"""
+    return st.session_state.get('corpus_user_records', [])
+
 def wait_for_data(keys, check_interval=0.5, max_wait=10):
     start_time = time.time()
 

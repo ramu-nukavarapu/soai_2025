@@ -79,7 +79,7 @@ def registrations_page():
                     st.session_state.data = techlead_filtered
 
             if st.session_state.data is not None:
-                display_data(st.session_state.data, st.session_state.cohort_type, st.session_state.intern_type)
+                display_data(st.session_state.data)
             else:
                 st.info("Please select an intern type to load the Tabular View.")
 
