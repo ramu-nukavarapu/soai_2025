@@ -1,7 +1,7 @@
 import pandas as pd
 import streamlit as st
 
-from utils.load_session_data import get_aidev_data, get_corpus_records_users, get_corpus_users, get_techlead_data
+from utils.load_session_data import get_aidev_data, get_corpus_records_users, get_corpus_users, get_residential_data, get_techlead_data
 
 def clean_phone_number(phone):
     """Clean and normalize phone numbers for matching"""
@@ -50,7 +50,7 @@ def generate_contribution_data(intern_type, cohort_type):
             df_clg = pd.DataFrame(get_techlead_data())
             df_clg = df_clg[(df_clg['Id'] >= t_start) & (df_clg['Id'] <= t_end)]
         else:
-            pass
+            df_clg = pd.DataFrame(get_residential_data())
 
     except Exception as e:
         st.error(f"Error reading college details: {e}")

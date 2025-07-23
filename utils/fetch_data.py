@@ -5,10 +5,11 @@ import streamlit as st
 
 # Fetch data from NocoDB
 @st.cache_data(show_spinner=False)
-def fetch_registrations_data(aidev_url, techlead_url, headers):
+def fetch_registrations_data(aidev_url, techlead_url, res_url, headers):
     aidev = fetch_registrations(aidev_url, headers)
     techlead = fetch_registrations(techlead_url, headers)
-    return aidev, techlead
+    residential = fetch_registrations(res_url, headers)
+    return aidev, techlead, residential
 
 @st.cache_data(show_spinner=False)
 def fetch_registrations(url, headers):
