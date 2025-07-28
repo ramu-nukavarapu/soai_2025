@@ -12,6 +12,7 @@ st.set_page_config(
 # Get secrets
 DB_DEV_URL = st.secrets["DB_DEV_URL"]
 DB_LEAD_URL = st.secrets["DB_LEAD_URL"]
+DB_RES_URL = st.secrets["DB_RES_URL"]
 GITLAB_URL = st.secrets["GITLAB_URL"]
 CORPUS_URL = st.secrets["CORPUS_URL"]
 
@@ -60,6 +61,8 @@ def init_session_state():
         st.session_state.aidev = None
     if 'techlead' not in st.session_state:
         st.session_state.techlead = None
+    if 'residential' not in st.session_state:
+        st.session_state.residential = None
     if 'gitlab_users' not in st.session_state:
         st.session_state.gitlab_users = None
     if 'corpus_user_records' not in st.session_state:
@@ -120,8 +123,8 @@ def home_page():
         if not st.session_state.aidev or not st.session_state.techlead:
             with st.spinner("Fetching registration data..."):
                 try:
-                    st.session_state.aidev, st.session_state.techlead = fetch_registrations_data(
-                        DB_DEV_URL, DB_LEAD_URL, DB_HEADERS
+                    st.session_state.aidev, st.session_state.techlead, st.session_state.residential = fetch_registrations_data(
+                        DB_DEV_URL, DB_LEAD_URL, DB_RES_URL, DB_HEADERS
                     )
                 except Exception as e:
                     st.error(f"Error fetching registration data: {str(e)}")
@@ -131,6 +134,7 @@ def home_page():
         if st.session_state.aidev is not None and st.session_state.techlead is not None:
             st.metric("Total AIDEV Registrations", len(st.session_state.aidev))
             st.metric("Total TECHLEAD Registrations", len(st.session_state.techlead))
+            st.metric("Total RESIDENTIAL Registrations", len(st.session_state.residential))
         else:
             st.warning("Registration data not available")
     

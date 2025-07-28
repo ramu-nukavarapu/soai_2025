@@ -9,6 +9,10 @@ def get_techlead_data():
     """Get TECHLEAD registration data from session state"""
     return st.session_state.get('techlead', [])
 
+def get_residential_data():
+    """Get TECHLEAD registration data from session state"""
+    return st.session_state.get('residential', [])
+
 def get_gitlab_users():
     """Get GitLab users data from session state"""
     return st.session_state.get('gitlab_users', [])
