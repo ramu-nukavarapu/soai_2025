@@ -35,19 +35,39 @@ def normalize_number(number):
 def build_user_phone_set(users):
     return set(user.get('phone') for user in users if user.get('phone'))
 
+# def update_users_with_gitlabinfo(gitlab_users, aidev_data, techlead_data):
+#     gitlab_emails = {
+#         user['email'].strip().lower()
+#         for user in gitlab_users
+#         if isinstance(user, dict) and user.get('email')
+#     }
+#     aidev_data = pd.DataFrame(aidev_data)
+#     techlead_data = pd.DataFrame(techlead_data)
+
+#     aidev_data['has_gitlab_account'] = aidev_data['Email Address'].str.strip().str.lower().isin(gitlab_emails).map({True: 'Yes', False: 'No'})
+#     techlead_data['has_gitlab_account'] = techlead_data['Email Address'].str.strip().str.lower().isin(gitlab_emails).map({True: 'Yes', False: 'No'})
+
+#     return aidev_data.to_dict(orient='records'), techlead_data.to_dict(orient='records')
+
 def update_users_with_gitlabinfo(gitlab_users, aidev_data, techlead_data):
-    gitlab_emails = {
-        user['email'].strip().lower()
-        for user in gitlab_users
-        if isinstance(user, dict) and user.get('email')
-    }
-    aidev_data = pd.DataFrame(aidev_data)
-    techlead_data = pd.DataFrame(techlead_data)
+  
+  email_to_username = {
+    user['email'].strip().lower(): user.get('username')
+    for user in gitlab_users
+    if isinstance(user, dict) and user.get('email') and user.get('username')
+  }
 
-    aidev_data['has_gitlab_account'] = aidev_data['Email Address'].str.strip().str.lower().isin(gitlab_emails).map({True: 'Yes', False: 'No'})
-    techlead_data['has_gitlab_account'] = techlead_data['Email Address'].str.strip().str.lower().isin(gitlab_emails).map({True: 'Yes', False: 'No'})
+  gitlab_emails = set(email_to_username.keys())
 
-    return aidev_data.to_dict(orient='records'), techlead_data.to_dict(orient='records')
+  aidev_data = pd.DataFrame(aidev_data)
+  techlead_data = pd.DataFrame(techlead_data)
+
+  for df in [aidev_data, techlead_data]:
+    email_series = df['Email Address'].str.strip().str.lower()
+    df['has_gitlab_account'] = email_series.isin(gitlab_emails).map({True: 'Yes', False: 'No'})
+    df['gitlab_username'] = email_series.map(email_to_username)
+
+  return aidev_data.to_dict(orient='records'), techlead_data.to_dict(orient='records')
 
 def aggregate_data_collegewise(aidev_updated, techlead_updated, analytics_type):
     summary = defaultdict(lambda: {

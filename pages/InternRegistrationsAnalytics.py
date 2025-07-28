@@ -93,4 +93,8 @@ def registrations_page():
         st.error("Could not fetch the required data. Please check your API connection and secrets, then click the Refresh button.")
     
 if __name__ == "__main__":
-    registrations_page()
+    if not st.session_state.get("authentication_status"):
+        st.warning("Please log in to access this page.")
+        st.stop()
+    else:
+        registrations_page()

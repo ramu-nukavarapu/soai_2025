@@ -172,12 +172,15 @@ def onboarding_page():
                 if st.session_state.selected_analytics == "corpus_analytics":
                     aidev_missing = filter_no_corpus_accounts(aidev_updated)
                     st.metric("AI Developers need to create accounts in corpus app",len(aidev_missing))
+                    data = pd.DataFrame(aidev_missing)
+                    data = data[indices]
                 else:
                     aidev_missing = filter_no_gitlab_accounts(aidev_updated)
                     st.metric("AI Developers need to create accounts in gitlab",len(aidev_missing))
-                
-                data = pd.DataFrame(aidev_missing)
-                data = data[indices]
+                    indices.append('gitlab_username')
+                    data = pd.DataFrame(aidev_updated)
+                    data = data[indices]
+
                 st.dataframe(data, use_container_width=True)
 
                 selected_colleges = st.multiselect("Filter by College(s)", options=data['Affiliation (College/Company/Organization Name)'].unique(), default=[])
@@ -187,15 +190,23 @@ def onboarding_page():
                         st.warning("No data available for the selected colleges.")
                     else:
                         st.dataframe(filtered_data, use_container_width=True)   
+                        if st.session_state.selected_analytics == "gitlab_analytics":
+                            csv = filtered_data.to_csv(index=False).encode('utf-8')
+                            st.download_button(label="Download users with gitlab usernames", data=csv, file_name=f'{selected_colleges[0]}-{st.session_state.selected_group}-data.csv')
             else:
                 if st.session_state.selected_analytics == "corpus_analytics":
                     techlead_missing = filter_no_corpus_accounts(techlead_updated)
                     st.metric("Tech Leads need to create accounts in corpus app",len(techlead_missing))
+                    data = pd.DataFrame(techlead_missing)
+                    data = data[indices]
                 else:
                     techlead_missing = filter_no_gitlab_accounts(techlead_updated)
                     st.metric("Tech Leads need to create accounts in gitlab",len(techlead_missing))
-                data = pd.DataFrame(techlead_missing)
-                data = data[indices]
+                    indices.append('gitlab_username')
+
+                    data = pd.DataFrame(techlead_updated)
+                    data = data[indices]
+
                 st.dataframe(data, use_container_width=True)
 
                 selected_colleges = st.multiselect("Filter by College(s)", options=data['Affiliation (College/Company/Organization Name)'].unique(), default=[])
@@ -206,8 +217,15 @@ def onboarding_page():
                         st.warning("No data available for the selected colleges.")
                     else:
                         st.dataframe(filtered_data, use_container_width=True)
+                        if st.session_state.selected_analytics == "gitlab_analytics":
+                            csv = filtered_data.to_csv(index=False).encode('utf-8')
+                            st.download_button(label="Download users with gitlab usernames", data=csv, file_name=f'{selected_colleges[0]}-{st.session_state.selected_group}-data.csv')
         else:
             st.info("Click the button above to fetch users data.")
 
 if __name__ == "__main__":
-    onboarding_page()
+    if not st.session_state.get("authentication_status"):
+        st.warning("Please log in to access this page.")
+        st.stop()
+    else:
+        onboarding_page()

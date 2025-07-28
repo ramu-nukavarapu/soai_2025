@@ -149,4 +149,8 @@ def corpus_stats_page():
     )
 
 if __name__ == "__main__":
-    corpus_stats_page()
+    if not st.session_state.get("authentication_status"):
+        st.warning("Please log in to access this page.")
+        st.stop()
+    else:
+        corpus_stats_page()
