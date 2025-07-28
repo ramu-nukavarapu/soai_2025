@@ -1,5 +1,9 @@
 import streamlit as st
+import streamlit_authenticator as stauth
+import yaml
+
 from utils.fetch_data import fetch_corpus_data, fetch_corpus_records_data, fetch_gitlab_users, fetch_registrations_data
+
 
 # Configuration
 st.set_page_config(
@@ -20,6 +24,8 @@ DB_API = st.secrets["DB_API"]
 GITLAB_API = st.secrets["GITLAB_API"]
 CORPUS_API = st.secrets["CORPUS_API"]
 
+signing_key = st.secrets["COOKIE_SIGNING_KEY"]
+
 # Headers
 DB_HEADERS = {
     "accept": "application/json",
@@ -31,6 +37,8 @@ CORPUS_HEADERS = {
     "Accept": "application/json",
     "Content-Type": "application/json"
 }
+
+config = yaml.safe_load(st.secrets["CONFIG_YAML"])
 
 # Custom CSS for better styling
 st.markdown("""
@@ -180,9 +188,26 @@ def home_page():
             st.metric("Total Corpus User Records", len(st.session_state.corpus_user_records))
         else:
             st.warning("Corpus data not available")
+
 def main():
-    init_session_state()
-    home_page()
+    authenticator = stauth.Authenticate(
+        config['credentials'],
+        "gitlab_cookie", 
+        signing_key, 
+        cookie_expiry_days=1
+    )
+
+    authenticator.login(location='main')
+
+    if st.session_state.get("authentication_status"):
+        st.sidebar.success(f"Welcome {st.session_state['name']} 👋")
+        authenticator.logout(location='sidebar')
+        init_session_state()
+        home_page()
+    elif st.session_state.get("authentication_status") is False:
+        st.error("Username/password incorrect")
+    else:
+        st.warning("Please enter your credentials")
 
 if __name__ == "__main__":
     main()
