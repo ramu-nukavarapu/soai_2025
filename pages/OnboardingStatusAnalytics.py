@@ -224,4 +224,8 @@ def onboarding_page():
             st.info("Click the button above to fetch users data.")
 
 if __name__ == "__main__":
-    onboarding_page()
+    if not st.session_state.get("authentication_status"):
+        st.warning("Please log in to access this page.")
+        st.stop()
+    else:
+        onboarding_page()
