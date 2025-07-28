@@ -7,3 +7,5 @@ plotly
 altair
 requests
 streamlit-aggrid
+pyyaml
+streamlit-authenticator
